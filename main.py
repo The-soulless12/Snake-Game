@@ -72,7 +72,7 @@ class JeuSnake:
     def afficher(self):
         # Affiche le serpent et la pomme
         self.canvas.delete("all")
-        self.canvas.create_rectangle(self.pomme[0], self.pomme[1], self.pomme[0] + TAILLE_CASE, self.pomme[1] + TAILLE_CASE, fill=COULEUR_POMME)
+        self.canvas.create_oval(self.pomme[0], self.pomme[1], self.pomme[0] + TAILLE_CASE, self.pomme[1] + TAILLE_CASE, fill=COULEUR_POMME)
         for segment in self.snake:
             x, y = segment
             self.canvas.create_rectangle(x, y, x + TAILLE_CASE, y + TAILLE_CASE, fill=self.couleur_serpent)
