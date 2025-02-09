@@ -22,6 +22,7 @@ class JeuSnake:
         self.pomme = self.placer_pomme()
         self.direction = "Right"
         self.couleur_serpent = couleur_serpent
+        self.score = 0
         
         self.running = True
         self.root.bind("<KeyPress>", self.change_direction)
@@ -67,6 +68,7 @@ class JeuSnake:
         # On vérifie si le serpent mange une pomme
         if new_tete == self.pomme:
             self.pomme = self.placer_pomme()
+            self.score += 1 
         else:
             self.snake.pop()
     
@@ -77,6 +79,8 @@ class JeuSnake:
         for segment in self.snake:
             x, y = segment
             self.canvas.create_rectangle(x, y, x + TAILLE_CASE, y + TAILLE_CASE, fill=self.couleur_serpent)
+
+        self.canvas.create_text(60, 20, text=f"Score : {self.score}", fill="white", font=("Comic Sans MS", 16))
     
     def update(self):
         # Met à jour le jeu à intervalles réguliers
@@ -88,8 +92,8 @@ class JeuSnake:
             self.game_over()
 
     def game_over(self):
-        self.canvas.create_text(LARGEUR//2, HAUTEUR//2, text="Game Over", fill="white", font=(police, 24))
-        self.canvas.create_text(LARGEUR//2, HAUTEUR//2 + 30, text="Appuyez sur Entrée pour revenir au menu", fill="white", font=(police, 12))
+        self.canvas.create_text(LARGEUR//2, HAUTEUR//2 - 10, text="Game Over", fill="white", font=(police, 30))
+        self.canvas.create_text(LARGEUR//2, HAUTEUR//2 + 40, text="Appuyez sur Entrée pour revenir au menu", fill="white", font=(police, 12))
         self.root.bind("<Return>", self.retour_menu)
         
     def retour_menu(self, event):
@@ -105,7 +109,7 @@ class SelectionCouleur:
         self.colors = ["white", "silver", "gray", "grey", "red", "maroon", "brown", 
                "orange", "gold", "yellow", "olive", "lime", "green", "teal", 
                "cyan", "blue", "navy", "purple", "magenta", "pink"]
-        self.selected_index = self.colors.index("green")
+        self.selected_index = self.colors.index(COULEUR_SERPENT)
         self.canvas = tk.Canvas(root, width=LARGEUR, height=HAUTEUR, bg=COULEUR_FOND)
         self.canvas.pack()
         self.afficher_couleur()
@@ -139,7 +143,9 @@ class SelectionCouleur:
         elif event.keysym == "Right":
             self.selected_index = (self.selected_index + 1) % len(self.colors)
         elif event.keysym == "Return":
-            self.menu.couleur_serpent = self.colors[self.selected_index]
+            global COULEUR_SERPENT
+            COULEUR_SERPENT = self.colors[self.selected_index]
+            self.menu.couleur_serpent = COULEUR_SERPENT
             self.canvas.pack_forget()
             self.menu.canvas.pack()
             self.menu.afficher_menu()
@@ -156,7 +162,7 @@ class Menu:
         
         self.options = ["LANCER UNE PARTIE", "CHANGER DE COULEUR", "DIFFICULTÉ", "QUITTER"]
         self.current_option = 0
-        self.couleur_serpent = "green"
+        self.couleur_serpent = COULEUR_SERPENT
         
         self.afficher_menu()
         self.root.bind("<KeyPress>", self.naviguer_menu)
