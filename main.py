@@ -7,6 +7,7 @@ TAILLE_CASE = 20  # Taille d'une case de la grille
 COULEUR_SERPENT = "green"  # Couleur initiale du serpent
 COULEUR_POMME = "red"  # Couleur de la nourriture
 COULEUR_FOND = "black"  # Couleur de fond du jeu
+police = "Comic Sans MS"
 
 class JeuSnake:
     def __init__(self, root, couleur_serpent):
@@ -84,7 +85,17 @@ class JeuSnake:
             self.afficher()
             self.root.after(100, self.update)
         else:
-            self.canvas.create_text(LARGEUR//2, HAUTEUR//2, text="Game Over", fill="white", font=("Comic Sans MS", 24))
+            self.game_over()
+
+    def game_over(self):
+        self.canvas.create_text(LARGEUR//2, HAUTEUR//2, text="Game Over", fill="white", font=(police, 24))
+        self.canvas.create_text(LARGEUR//2, HAUTEUR//2 + 30, text="Appuyez sur Entrée pour revenir au menu", fill="white", font=(police, 12))
+        self.root.bind("<Return>", self.retour_menu)
+        
+    def retour_menu(self, event):
+        self.canvas.pack_forget()  
+        self.root.unbind("<Return>") 
+        Menu(self.root)
 
 class SelectionCouleur:
     def __init__(self, root, menu):
@@ -103,6 +114,10 @@ class SelectionCouleur:
     def afficher_couleur(self):
         # Affiche les couleurs disponibles
         self.canvas.delete("all")
+
+        nom_couleur = self.colors[self.selected_index].upper()
+        self.canvas.create_text(LARGEUR//2, 70, text=nom_couleur, fill="white", font=(police, 18))
+
         cols = 4
         rows = (len(self.colors) + cols - 1) // cols
         box_size = 50
@@ -139,7 +154,7 @@ class Menu:
         self.canvas = tk.Canvas(root, width=LARGEUR, height=HAUTEUR, bg=COULEUR_FOND)
         self.canvas.pack()
         
-        self.options = ["LANCER UNE PARTIE", "CHANGER DE COULEUR", "DIFFICULTÉ"]
+        self.options = ["LANCER UNE PARTIE", "CHANGER DE COULEUR", "DIFFICULTÉ", "QUITTER"]
         self.current_option = 0
         self.couleur_serpent = "green"
         
@@ -148,10 +163,10 @@ class Menu:
     
     def afficher_menu(self):
         self.canvas.delete("all")
-        self.canvas.create_text(LARGEUR//2, HAUTEUR//4, text="THE SOULLESS'S SNAKE", fill="white", font=("Comic Sans MS", 24))
+        self.canvas.create_text(LARGEUR//2, HAUTEUR//4, text="THE SOULLESS'S SNAKE", fill="white", font=(police, 24))
         for index, option in enumerate(self.options):
             color = "yellow" if index == self.current_option else "white"
-            self.canvas.create_text(LARGEUR//2, HAUTEUR//2 + index * 30, text=option, fill=color, font=("Comic Sans MS", 18))
+            self.canvas.create_text(LARGEUR//2, HAUTEUR//2 + index * 30, text=option, fill=color, font=(police, 18))
     
     def naviguer_menu(self, event):
         if event.keysym == "Up":
@@ -163,6 +178,8 @@ class Menu:
                 self.debut_jeu()
             elif self.current_option == 1:
                 self.changer_couleur()
+            elif self.current_option == 3:
+                self.root.quit()
         self.afficher_menu()
     
     def debut_jeu(self):
