@@ -8,9 +8,10 @@ COULEUR_SERPENT = "green"  # Couleur initiale du serpent
 COULEUR_POMME = "red"  # Couleur de la nourriture
 COULEUR_FOND = "black"  # Couleur de fond du jeu
 police = "Comic Sans MS"
+DIFFICULTE = "Moyen"
 
 class JeuSnake:
-    def __init__(self, root, couleur_serpent):
+    def __init__(self, root, couleur_serpent, difficulte):
         # Initialise le jeu
         self.root = root
         self.root.title("The Soulless's Snake")
@@ -23,6 +24,8 @@ class JeuSnake:
         self.direction = "Right"
         self.couleur_serpent = couleur_serpent
         self.score = 0
+        self.difficulte = difficulte
+        self.vitesse = {"Facile": 150, "Moyen": 80, "Difficile": 40}[self.difficulte]
         
         self.running = True
         self.root.bind("<KeyPress>", self.change_direction)
@@ -81,13 +84,14 @@ class JeuSnake:
             self.canvas.create_rectangle(x, y, x + TAILLE_CASE, y + TAILLE_CASE, fill=self.couleur_serpent)
 
         self.canvas.create_text(60, 20, text=f"Score : {self.score}", fill="white", font=("Comic Sans MS", 16))
+        self.canvas.create_text(LARGEUR//2, 20, text=f"{self.difficulte}", fill="yellow", font=("Comic Sans MS", 20))
     
     def update(self):
         # Met à jour le jeu à intervalles réguliers
         if self.running:
             self.bouger_serpent()
             self.afficher()
-            self.root.after(100, self.update)
+            self.root.after(self.vitesse, self.update)
         else:
             self.game_over()
 
@@ -99,7 +103,7 @@ class JeuSnake:
     def retour_menu(self, event):
         self.canvas.pack_forget()  
         self.root.unbind("<Return>") 
-        Menu(self.root)
+        Menu(self.root, self.couleur_serpent, self.difficulte)
 
 class SelectionCouleur:
     def __init__(self, root, menu):
@@ -152,8 +156,45 @@ class SelectionCouleur:
             self.menu.root.bind("<KeyPress>", self.menu.naviguer_menu)
         self.afficher_couleur()
 
+class SelectionDifficulte:
+    def __init__(self, root, menu):
+        # Initialise le menu de sélection de difficulté
+        self.root = root
+        self.menu = menu
+        self.niveaux = ["Facile", "Moyen", "Difficile"]
+        self.selected_index = self.niveaux.index(self.menu.difficulte)
+        
+        self.canvas = tk.Canvas(root, width=LARGEUR, height=HAUTEUR, bg=COULEUR_FOND)
+        self.canvas.pack()
+        
+        self.afficher_difficulte()
+        self.root.bind("<KeyPress>", self.navigation_difficulte)
+
+    def afficher_difficulte(self):
+        # Affiche les difficultés disponibles
+        self.canvas.delete("all")
+        self.canvas.create_text(LARGEUR//2, 100, text="Choisissez la difficulté", fill="white", font=(police, 20))
+        
+        for index, niveau in enumerate(self.niveaux):
+            color = "yellow" if index == self.selected_index else "white"
+            self.canvas.create_text(LARGEUR//2, 200 + index * 40, text=niveau, fill=color, font=(police, 18))
+    
+    def navigation_difficulte(self, event):
+        # Gère la navigation entre les difficultés
+        if event.keysym == "Up":
+            self.selected_index = (self.selected_index - 1) % len(self.niveaux)
+        elif event.keysym == "Down":
+            self.selected_index = (self.selected_index + 1) % len(self.niveaux)
+        elif event.keysym == "Return":
+            self.menu.difficulte = self.niveaux[self.selected_index]  # On sauvegarde le choix
+            self.canvas.pack_forget()
+            self.menu.canvas.pack()
+            self.menu.afficher_menu()
+            self.menu.root.bind("<KeyPress>", self.menu.naviguer_menu)
+        self.afficher_difficulte()
+
 class Menu:
-    def __init__(self, root):
+    def __init__(self, root, couleur_serpent=COULEUR_SERPENT, difficulte=DIFFICULTE):
         self.root = root
         self.root.title("The Soulless's Snake")
         self.root.resizable(False, False)
@@ -162,7 +203,8 @@ class Menu:
         
         self.options = ["LANCER UNE PARTIE", "CHANGER DE COULEUR", "DIFFICULTÉ", "QUITTER"]
         self.current_option = 0
-        self.couleur_serpent = COULEUR_SERPENT
+        self.couleur_serpent = couleur_serpent
+        self.difficulte = difficulte
         
         self.afficher_menu()
         self.root.bind("<KeyPress>", self.naviguer_menu)
@@ -184,17 +226,23 @@ class Menu:
                 self.debut_jeu()
             elif self.current_option == 1:
                 self.changer_couleur()
+            elif self.current_option == 2:
+                self.changer_difficulte()
             elif self.current_option == 3:
                 self.root.quit()
         self.afficher_menu()
     
     def debut_jeu(self):
         self.canvas.pack_forget()
-        JeuSnake(self.root, self.couleur_serpent)
+        JeuSnake(self.root, self.couleur_serpent, self.difficulte)
     
     def changer_couleur(self):
         self.canvas.pack_forget()
         SelectionCouleur(self.root, self)
+
+    def changer_difficulte(self):
+        self.canvas.pack_forget()
+        SelectionDifficulte(self.root, self)
 
 if __name__ == "__main__":
     root = tk.Tk()
