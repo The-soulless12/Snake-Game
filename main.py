@@ -20,12 +20,18 @@ class JeuSnake:
         self.canvas.pack()
         
         self.snake = [(100, 100), (90, 100), (80, 100)]
-        self.pomme = self.placer_pomme()
         self.direction = "Right"
         self.couleur_serpent = couleur_serpent
         self.score = 0
         self.difficulte = difficulte
-        self.vitesse = {"Facile": 150, "Moyen": 80, "Difficile": 40}[self.difficulte]
+        self.vitesse = {"Facile": 150, "Moyen": 85, "Difficile": 50}[self.difficulte]
+        
+        # Gestion des pommes
+        self.pommes = []
+        if self.difficulte == "Difficile":
+            self.pommes = [self.placer_pomme(), self.placer_pomme()]
+        else:
+            self.pommes = [self.placer_pomme()]
         
         self.running = True
         self.root.bind("<KeyPress>", self.change_direction)
@@ -33,9 +39,12 @@ class JeuSnake:
     
     def placer_pomme(self):
         # Génère une position aléatoire pour la pomme
-        x = random.randint(0, (LARGEUR // TAILLE_CASE) - 1) * TAILLE_CASE
-        y = random.randint(0, (HAUTEUR // TAILLE_CASE) - 1) * TAILLE_CASE
-        return (x, y)
+        while True:
+            x = random.randint(1, (LARGEUR // TAILLE_CASE) - 2) * TAILLE_CASE
+            y = random.randint(3, (HAUTEUR // TAILLE_CASE) - 2) * TAILLE_CASE
+            # On vérifie si la position n'est pas sur un mur ni sur une autre pomme
+            if (20 <= x < LARGEUR - 20) and (60 <= y < HAUTEUR - 20) and (x,y) not in self.pommes:
+                return (x, y)
     
     def change_direction(self, event):
         # Change la direction du serpent selon la touche pressée
@@ -62,26 +71,36 @@ class JeuSnake:
         new_tete = (tete_x, tete_y)
         
         # On vérifie les collisions
-        if new_tete in self.snake or tete_x < 0 or tete_x >= LARGEUR or tete_y < 0 or tete_y >= HAUTEUR:
+        if (new_tete in self.snake or tete_x < 20 or tete_x >= LARGEUR - 20 or tete_y < 60 or tete_y >= HAUTEUR - 20):
             self.running = False
             return
-        
+
         self.snake.insert(0, new_tete)
         
-        # On vérifie si le serpent mange une pomme
-        if new_tete == self.pomme:
-            self.pomme = self.placer_pomme()
-            self.score += 1 
+        # On vérifie si le serpent mange une des pommes
+        if new_tete in self.pommes:
+            self.pommes.remove(new_tete)  # On supprime la pomme mangée
+            self.pommes.append(self.placer_pomme())  # On génére une nouvelle pomme
+            self.score += 1
         else:
             self.snake.pop()
     
     def afficher(self):
         # Affiche le serpent et la pomme
         self.canvas.delete("all")
-        self.canvas.create_oval(self.pomme[0], self.pomme[1], self.pomme[0] + TAILLE_CASE, self.pomme[1] + TAILLE_CASE, fill=COULEUR_POMME)
+        # Afficher toutes les pommes
+        for pomme in self.pommes:
+            self.canvas.create_oval(pomme[0], pomme[1], pomme[0] + TAILLE_CASE, pomme[1] + TAILLE_CASE, fill=COULEUR_POMME)
+        # Afficher le serpent
         for segment in self.snake:
             x, y = segment
             self.canvas.create_rectangle(x, y, x + TAILLE_CASE, y + TAILLE_CASE, fill=self.couleur_serpent)
+
+        # Tracé des murs
+        self.canvas.create_rectangle(0, 40, LARGEUR, 60, fill=COULEUR_SERPENT)
+        self.canvas.create_rectangle(0, HAUTEUR - 20, LARGEUR, HAUTEUR, fill=COULEUR_SERPENT)
+        self.canvas.create_rectangle(0, 40, 20, HAUTEUR, fill=COULEUR_SERPENT)
+        self.canvas.create_rectangle(LARGEUR - 20, 40, LARGEUR, HAUTEUR, fill=COULEUR_SERPENT)
 
         self.canvas.create_text(60, 20, text=f"Score : {self.score}", fill="white", font=("Comic Sans MS", 16))
         self.canvas.create_text(LARGEUR//2, 20, text=f"{self.difficulte}", fill="yellow", font=("Comic Sans MS", 20))
